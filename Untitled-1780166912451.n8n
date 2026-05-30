@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-30T19:00:49.318Z",
+  "updatedAt": "2026-05-30T19:19:54.775Z",
   "createdAt": "2026-05-30T18:48:33.051Z",
   "id": "QWmr4ySpKdC7gmGO",
   "name": "Untitled-1780166912451",
@@ -15,7 +15,7 @@
       "typeVersion": 1,
       "position": [
         -400,
-        -208
+        -16
       ]
     },
     {
@@ -50,7 +50,7 @@
       "typeVersion": 3.4,
       "position": [
         -208,
-        -208
+        -16
       ]
     },
     {
@@ -73,7 +73,7 @@
       "typeVersion": 4.1,
       "position": [
         80,
-        -320
+        -128
       ]
     },
     {
@@ -100,7 +100,7 @@
       "typeVersion": 4.1,
       "position": [
         80,
-        -128
+        64
       ]
     },
     {
@@ -127,7 +127,7 @@
       "typeVersion": 4.1,
       "position": [
         304,
-        -128
+        64
       ]
     },
     {
@@ -140,8 +140,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -400,
-        208
+        -416,
+        320
       ],
       "webhookId": "ecb5233e-0f59-4344-8096-f7781d7b28b4"
     },
@@ -154,8 +154,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -208,
-        208
+        -224,
+        320
       ]
     },
     {
@@ -188,8 +188,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        32,
-        208
+        16,
+        320
       ]
     },
     {
@@ -202,8 +202,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        240,
-        112
+        224,
+        224
       ]
     },
     {
@@ -231,9 +231,154 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        224
+        464,
+        336
       ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -432,
+        -256
+      ],
+      "id": "86b1fbb4-32db-4fa6-add6-c6ca68014c19",
+      "name": "Telegram Twitter Monitor",
+      "webhookId": "a7698d03-bea6-4065-ba99-77f3a38f5bd5",
+      "credentials": {
+        "telegramApi": {
+          "id": "MwYIbmO61cjEu6oe",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = items[0].json.message || {};\nconst text = message.text || \"\";\nconst chatId = message.chat?.id || \"\";\n\n// Regex to extract X/Twitter username\nconst twitterRegex = /(?:https?:\\/\\/(?:twitter|x)\\.com\\/)?@?([a-zA-Z0-9_]{1,15})/i;\nconst match = text.match(twitterRegex);\nconst username = match ? match[1] : null;\n\nconst ignored = [\"start\", \"help\", \"settings\"];\nconst isValid = username && !ignored.includes(username.toLowerCase());\n\nreturn [{\n  json: {\n    text,\n    chatId,\n    username,\n    isValid: !!isValid\n  }\n}];"
+      },
+      "id": "extract-telegram-handle-id",
+      "name": "Extract Telegram Handle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "valid-cond",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equal",
+                "name": "filter.operator.equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-valid-handle-id",
+      "name": "If Valid Handle",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitterapi.io/oapi/x_user_stream/add_user_to_monitor_tweet",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "new1_c84536b2f31c4ec79e20cd49b4ef029e"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"x_user_name\": \"{{ $json.username }}\"\n}",
+        "options": {}
+      },
+      "id": "add-user-to-monitor-id",
+      "name": "Add User to Monitor Stream",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract Telegram Handle').item.json.chatId }}",
+        "text": "=✅ Successfully added @{{ $('Extract Telegram Handle').item.json.username }} to your Twitter Stream Monitor! 🚀",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-confirm-add-id",
+      "name": "Telegram Confirm Add",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -352
+      ],
+      "webhookId": "68f212ba-33ae-46b5-94d7-a94ba088a82d",
+      "credentials": {
+        "telegramApi": {
+          "id": "MwYIbmO61cjEu6oe",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extract Telegram Handle').item.json.chatId }}",
+        "text": "=❌ Could not extract a valid Twitter username from your message. Please send a valid Twitter URL (e.g., https://x.com/elonmusk).",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-error-add-id",
+      "name": "Telegram Error Add",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        496,
+        -176
+      ],
+      "webhookId": "dcea4432-fd7b-49e1-9665-da131aac5a05",
+      "credentials": {
+        "telegramApi": {
+          "id": "MwYIbmO61cjEu6oe",
+          "name": "Telegram account 2"
+        }
+      }
     }
   ],
   "connections": {
@@ -325,18 +470,111 @@
           }
         ]
       ]
+    },
+    "Telegram Twitter Monitor": {
+      "main": [
+        [
+          {
+            "node": "Extract Telegram Handle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Telegram Handle": {
+      "main": [
+        [
+          {
+            "node": "If Valid Handle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid Handle": {
+      "main": [
+        [
+          {
+            "node": "Add User to Monitor Stream",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Error Add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add User to Monitor Stream": {
+      "main": [
+        [
+          {
+            "node": "Telegram Confirm Add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
   "staticData": null,
-  "meta": null,
-  "pinData": {},
-  "versionId": "108b93e5-f1be-4e98-94f2-11df978a85bf",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Telegram Twitter Monitor": [
+      {
+        "json": {
+          "update_id": 52158282,
+          "message": {
+            "message_id": 2,
+            "from": {
+              "id": 5844999070,
+              "is_bot": false,
+              "first_name": "The Matrix",
+              "username": "bloch_cellel",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 5844999070,
+              "first_name": "The Matrix",
+              "username": "bloch_cellel",
+              "type": "private"
+            },
+            "date": 1780167873,
+            "text": "https://x.com/Alae_Crypto",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 25,
+                "type": "url"
+              }
+            ],
+            "link_preview_options": {
+              "url": "https://x.com/Alae_Crypto"
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "2054a72b-7dd5-47c8-b98d-6600ba3c2d5a",
   "activeVersionId": null,
-  "versionCounter": 5,
+  "versionCounter": 16,
   "triggerCount": 0,
   "shared": [
     {
