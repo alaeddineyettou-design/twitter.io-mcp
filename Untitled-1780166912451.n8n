@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-30T18:55:38.943Z",
+  "updatedAt": "2026-05-30T19:00:49.318Z",
   "createdAt": "2026-05-30T18:48:33.051Z",
   "id": "QWmr4ySpKdC7gmGO",
   "name": "Untitled-1780166912451",
@@ -118,7 +118,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"rule_id\": \"{{ $json.rule_id }}\",\n  \"tag\": \"{{ $parent.item.json.tag }}\",\n  \"value\": \"{{ $parent.item.json.rule_value }}\",\n  \"interval_seconds\": 30,\n  \"is_effect\": 1\n}",
+        "jsonBody": "={\n  \"rule_id\": \"{{ $json.rule_id }}\",\n  \"tag\": \"{{ $('Setup Twitter Credentials').item.json.tag }}\",\n  \"value\": \"{{ $('Setup Twitter Credentials').item.json.rule_value }}\",\n  \"interval_seconds\": 30,\n  \"is_effect\": 1\n}",
         "options": {}
       },
       "id": "activate-twitter-rule-id",
@@ -334,9 +334,9 @@
   "staticData": null,
   "meta": null,
   "pinData": {},
-  "versionId": "7b17b94f-93b0-461a-a52f-8ee3a86d0ebe",
+  "versionId": "108b93e5-f1be-4e98-94f2-11df978a85bf",
   "activeVersionId": null,
-  "versionCounter": 4,
+  "versionCounter": 5,
   "triggerCount": 0,
   "shared": [
     {

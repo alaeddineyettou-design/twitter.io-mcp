@@ -164,8 +164,8 @@ export class TwitterStreamMonitorSolanaMemecoinsWorkflow {
         specifyBody: 'json',
         jsonBody: `={
   "rule_id": "{{ $json.rule_id }}",
-  "tag": "{{ $parent.item.json.tag }}",
-  "value": "{{ $parent.item.json.rule_value }}",
+  "tag": "{{ $('Setup Twitter Credentials').item.json.tag }}",
+  "value": "{{ $('Setup Twitter Credentials').item.json.rule_value }}",
   "interval_seconds": 30,
   "is_effect": 1
 }`,
