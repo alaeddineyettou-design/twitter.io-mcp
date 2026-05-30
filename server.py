@@ -467,19 +467,23 @@ def get_webhook_rules() -> dict:
 
 
 @mcp.tool()
-def update_webhook_rule(ruleId: str, tag: str = "", value: str = "") -> dict:
+def update_webhook_rule(rule_id: str, tag: str, value: str, interval_seconds: int = 30, is_effect: int = 1) -> dict:
     """Update an existing webhook filter rule.
     
     Args:
-        ruleId: The rule ID to update (required)
-        tag: Updated label/name (optional)
-        value: Updated filter value (optional)
+        rule_id: The rule ID to update (required)
+        tag: Updated label/name (required)
+        value: Updated filter value (required)
+        interval_seconds: Frequency of checks in seconds (default 30)
+        is_effect: Set to 1 to activate, 0 to deactivate (default 1)
     """
-    payload = {"ruleId": ruleId}
-    if tag:
-        payload["tag"] = tag
-    if value:
-        payload["value"] = value
+    payload = {
+        "rule_id": rule_id,
+        "tag": tag,
+        "value": value,
+        "interval_seconds": interval_seconds,
+        "is_effect": is_effect
+    }
     return call("oapi/tweet_filter/update_rule", data=payload, method="POST")
 
 
@@ -494,17 +498,17 @@ def delete_webhook_rule(ruleId: str) -> dict:
 # ============================================================
 
 @mcp.tool()
-def add_user_to_monitor(userId: str) -> dict:
-    """Add a user to the tweet monitoring stream by userId.
+def add_user_to_monitor(x_user_name: str) -> dict:
+    """Add a user to the tweet monitoring stream by their X username (handle).
     You will receive real-time notifications when this user tweets.
     """
-    return call("oapi/x_user_stream/add_user_to_monitor_tweet", data={"userId": userId}, method="POST")
+    return call("oapi/x_user_stream/add_user_to_monitor_tweet", data={"x_user_name": x_user_name}, method="POST")
 
 
 @mcp.tool()
-def remove_user_from_monitor(userId: str) -> dict:
-    """Remove a user from the tweet monitoring stream by userId."""
-    return call("oapi/x_user_stream/remove_user_to_monitor_tweet", data={"userId": userId}, method="POST")
+def remove_user_from_monitor(id_for_user: str) -> dict:
+    """Remove a user from the tweet monitoring stream by their internal monitored user ID (id_for_user)."""
+    return call("oapi/x_user_stream/remove_user_to_monitor_tweet", data={"id_for_user": id_for_user}, method="POST")
 
 
 @mcp.tool()

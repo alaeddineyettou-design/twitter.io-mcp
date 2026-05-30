@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-05-30T18:51:22.606Z",
+  "updatedAt": "2026-05-30T18:55:38.943Z",
   "createdAt": "2026-05-30T18:48:33.051Z",
   "id": "QWmr4ySpKdC7gmGO",
   "name": "Untitled-1780166912451",
@@ -15,7 +15,7 @@
       "typeVersion": 1,
       "position": [
         -400,
-        -200
+        -208
       ]
     },
     {
@@ -49,8 +49,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -200,
-        -200
+        -208,
+        -208
       ]
     },
     {
@@ -100,7 +100,7 @@
       "typeVersion": 4.1,
       "position": [
         80,
-        -120
+        -128
       ]
     },
     {
@@ -118,7 +118,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"rule_id\": \"{{ $json.rule_id }}\",\n  \"is_active\": true\n}",
+        "jsonBody": "={\n  \"rule_id\": \"{{ $json.rule_id }}\",\n  \"tag\": \"{{ $parent.item.json.tag }}\",\n  \"value\": \"{{ $parent.item.json.rule_value }}\",\n  \"interval_seconds\": 30,\n  \"is_effect\": 1\n}",
         "options": {}
       },
       "id": "activate-twitter-rule-id",
@@ -126,8 +126,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        300,
-        -120
+        304,
+        -128
       ]
     },
     {
@@ -141,7 +141,7 @@
       "typeVersion": 1,
       "position": [
         -400,
-        200
+        208
       ],
       "webhookId": "ecb5233e-0f59-4344-8096-f7781d7b28b4"
     },
@@ -154,8 +154,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -200,
-        200
+        -208,
+        208
       ]
     },
     {
@@ -188,8 +188,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        20,
-        200
+        32,
+        208
       ]
     },
     {
@@ -203,7 +203,7 @@
       "typeVersion": 4.1,
       "position": [
         240,
-        100
+        112
       ]
     },
     {
@@ -232,7 +232,7 @@
       "typeVersion": 3.4,
       "position": [
         480,
-        200
+        224
       ]
     }
   ],
@@ -328,14 +328,15 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   },
   "staticData": null,
   "meta": null,
-  "pinData": null,
-  "versionId": "76f769de-879e-4748-931c-58598a64d486",
+  "pinData": {},
+  "versionId": "7b17b94f-93b0-461a-a52f-8ee3a86d0ebe",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 4,
   "triggerCount": 0,
   "shared": [
     {
