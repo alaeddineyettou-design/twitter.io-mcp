@@ -1,0 +1,361 @@
+{
+  "updatedAt": "2026-05-30T18:51:22.606Z",
+  "createdAt": "2026-05-30T18:48:33.051Z",
+  "id": "QWmr4ySpKdC7gmGO",
+  "name": "Untitled-1780166912451",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual-execution-id",
+      "name": "Trigger Manual Execution",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "apikey-assignment",
+              "name": "X_API_KEY",
+              "value": "new1_c84536b2f31c4ec79e20cd49b4ef029e",
+              "type": "string"
+            },
+            {
+              "id": "tag-assignment",
+              "name": "tag",
+              "value": "solana-kols",
+              "type": "string"
+            },
+            {
+              "id": "rule-assignment",
+              "name": "rule_value",
+              "value": "from:ansem OR from:cobie OR from:solana OR from:pumpdotfun",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "setup-twitter-creds-id",
+      "name": "Setup Twitter Credentials",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitterapi.io/oapi/x_user_stream/get_user_to_monitor_tweet",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.X_API_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-monitored-users-id",
+      "name": "Get Monitored Users List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        80,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitterapi.io/oapi/tweet_filter/add_rule",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.X_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"tag\": \"{{ $json.tag }}\",\n  \"value\": \"{{ $json.rule_value }}\",\n  \"interval_seconds\": 30\n}",
+        "options": {}
+      },
+      "id": "add-twitter-rule-id",
+      "name": "Add Twitter Monitor Rule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        80,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitterapi.io/oapi/tweet_filter/update_rule",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $('Setup Twitter Credentials').item.json.X_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"rule_id\": \"{{ $json.rule_id }}\",\n  \"is_active\": true\n}",
+        "options": {}
+      },
+      "id": "activate-twitter-rule-id",
+      "name": "Activate Twitter Monitor Rule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        300,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "path": "twitter-stream",
+        "options": {}
+      },
+      "id": "tweet-webhook-receiver-id",
+      "name": "Tweet Webhook Receiver",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        200
+      ],
+      "webhookId": "ecb5233e-0f59-4344-8096-f7781d7b28b4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the tweet text from the incoming Webhook body\nconst payload = items[0].json.body || {};\n\n// Handle both direct and nested formats from twitterapi.io stream\nconst tweetText = payload.text || payload.tweet?.text || \"\";\nconst user = payload.user?.screen_name || payload.tweet?.user?.screen_name || \"Unknown\";\nconst name = payload.user?.name || payload.tweet?.name || \"Unknown\";\nconst idStr = payload.id_str || payload.tweet?.id_str || \"\";\n\n// Regex for Solana mint address (base58 format, length 32-44)\nconst solanaRegex = /\\b[1-9A-HJ-NP-Za-km-z]{32,44}\\b/g;\nconst matches = tweetText.match(solanaRegex) || [];\n\n// Exclude false positives\nconst uniqueMints = [...new Set(matches)];\n\nreturn [{\n  json: {\n    rawPayload: payload,\n    tweetText,\n    user,\n    name,\n    tweetUrl: `https://x.com/${user}/status/${idStr}`,\n    mints: uniqueMints,\n    tokenFound: uniqueMints.length > 0,\n    firstMint: uniqueMints[0] || null\n  }\n}];"
+      },
+      "id": "extract-solana-token-id",
+      "name": "Extract Solana Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cond-token-found",
+              "leftValue": "={{ $json.tokenFound }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equal",
+                "name": "filter.operator.equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-token-found-id",
+      "name": "If Token Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        20,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.dexscreener.com/latest/dex/tokens/{{ $json.firstMint }}",
+        "options": {}
+      },
+      "id": "fetch-dexscreener-info-id",
+      "name": "Fetch DexScreener Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telegram-alert-title",
+              "name": "alert_title",
+              "value": "=🚨 NEW TWEET FROM @{{ $('Extract Solana Token').item.json.user }}",
+              "type": "string"
+            },
+            {
+              "id": "telegram-alert-msg",
+              "name": "alert_message",
+              "value": "=🐦 Author: {{ $('Extract Solana Token').item.json.name }} (@{{ $('Extract Solana Token').item.json.user }})\n💬 Text: {{ $('Extract Solana Token').item.json.tweetText }}\n\n🔗 Link: {{ $('Extract Solana Token').item.json.tweetUrl }}\n\n{{ $('Extract Solana Token').item.json.tokenFound ? \"🪙 Solana Token Detected: \" + $('Extract Solana Token').item.json.firstMint : \"\" }}\n{{ $json.pairs && $json.pairs[0] ? \"\\n📊 DexScreener Stats:\\n- Pair: \" + $json.pairs[0].baseToken.symbol + \"/\" + $json.pairs[0].quoteToken.symbol + \"\\n- Price USD: $\" + $json.pairs[0].priceUsd + \"\\n- Liquidity: $\" + $json.pairs[0].liquidity.usd.toLocaleString() + \"\\n- 24h Volume: $\" + $json.pairs[0].volume.h24.toLocaleString() + \"\\n- Chart: \" + $json.pairs[0].url : \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-telegram-alert-id",
+      "name": "Format Telegram Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger Manual Execution": {
+      "main": [
+        [
+          {
+            "node": "Setup Twitter Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Twitter Credentials": {
+      "main": [
+        [
+          {
+            "node": "Get Monitored Users List",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Twitter Monitor Rule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Twitter Monitor Rule": {
+      "main": [
+        [
+          {
+            "node": "Activate Twitter Monitor Rule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tweet Webhook Receiver": {
+      "main": [
+        [
+          {
+            "node": "Extract Solana Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Solana Token": {
+      "main": [
+        [
+          {
+            "node": "If Token Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Token Found": {
+      "main": [
+        [
+          {
+            "node": "Fetch DexScreener Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch DexScreener Info": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "76f769de-879e-4748-931c-58598a64d486",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-30T18:48:33.099Z",
+      "createdAt": "2026-05-30T18:48:33.099Z",
+      "role": "workflow:owner",
+      "workflowId": "QWmr4ySpKdC7gmGO",
+      "projectId": "LbqdeByYTM8pCArF",
+      "project": {
+        "updatedAt": "2026-01-23T21:34:38.287Z",
+        "createdAt": "2026-01-23T21:33:53.161Z",
+        "id": "LbqdeByYTM8pCArF",
+        "name": "Alae Dddine <blochcellel@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "505a860d-121c-4389-9342-74a2c762e4e6"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
